@@ -180,4 +180,3 @@ function updateNearbyPlacesList(places) {
         placesList.appendChild(li);
     });
 }
-
