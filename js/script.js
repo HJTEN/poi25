@@ -7,6 +7,8 @@ const landmarkInfo = document.getElementById('landmark-info');
 const factList = document.getElementById('fact-list');
 const loadMoreBtn = document.getElementById('load-more-btn');
 const placesList = document.getElementById('places-list');
+const loadingSpinner = document.getElementById('loading-spinner'); // Loading spinner
+const errorMessage = document.getElementById('error-message'); // Error message container
 
 // API keys and endpoints
 const GOOGLE_API_KEY = 'AIzaSyA4Xo27wNyl5vJXm32137rlFa4VAcc7JJ4';
@@ -46,53 +48,46 @@ async function startCamera() {
             video: { facingMode: 'environment' }
         });
         cameraFeed.srcObject = stream;
-        cameraFeed.addEventListener('loadedmetadata', () => {
-            detectLandmarks();
-        });
+        cameraFeed.style.display = 'block'; // Show camera feed
         await cameraFeed.play();
+        detectLandmarks();
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Unable to access the camera. Please check permissions.');
     }
 }
 
-let frameCount = 0;
 async function detectLandmarks() {
     const ctx = canvas.getContext('2d');
     canvas.width = cameraFeed.videoWidth;
     canvas.height = cameraFeed.videoHeight;
 
     async function processFrame() {
-        frameCount++;
-        if (frameCount % 3 === 0) {  // Process every 3rd frame
-            ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
-            const imageData = canvas.toDataURL('image/jpeg', 0.8);
-            const base64Image = imageData.split(',')[1];
+        ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        const base64Image = imageData.split(',')[1];
 
-            try {
-                const response = await fetch(VISION_API_ENDPOINT, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        requests: [{
-                            image: { content: base64Image },
-                            features: [{ type: 'LANDMARK_DETECTION', maxResults: 1 }]
-                        }]
-                    })
-                });
+        const response = await fetch(VISION_API_ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                requests: [{
+                    image: { content: base64Image },
+                    features: [{ type: 'LANDMARK_DETECTION', maxResults: 1 }]
+                }]
+            })
+        });
 
-                const data = await response.json();
-                if (data.responses[0]?.landmarkAnnotations) {
-                    const landmark = data.responses[0].landmarkAnnotations[0];
-                    updateLandmarkInfo(landmark.description);
-                    getNearbyPlaces(landmark.locations[0]?.latLng);
-                }
-            } catch (error) {
-                console.error('Error detecting landmarks:', error);
-                alert('Error detecting landmarks. Please try again.');
-            }
+        const data = await response.json();
+        if (data.responses[0]?.landmarkAnnotations) {
+            const landmark = data.responses[0].landmarkAnnotations[0];
+            updateLandmarkInfo(landmark.description);
+            getNearbyPlaces(landmark.locations[0]?.latLng);
+        } else {
+            showErrorMessage('No landmark detected. Please try again.');
         }
-        requestAnimationFrame(processFrame); // Continue processing
+
+        requestAnimationFrame(processFrame); // Process the next frame
     }
 
     processFrame();
@@ -101,12 +96,10 @@ async function detectLandmarks() {
 // Landmark Info and Fact Generation
 async function updateLandmarkInfo(landmarkName) {
     landmarkInfo.querySelector('h2').textContent = landmarkName;
-    landmarkInfo.querySelector('.loading').classList.remove('hidden');  // Show loading
-
+    showLoadingSpinner(true); // Show spinner while fetching facts
     facts = await getGeminiFacts(landmarkName);
     displayFactList();
-
-    landmarkInfo.querySelector('.loading').classList.add('hidden');  // Hide loading
+    showLoadingSpinner(false); // Hide spinner when facts are ready
 }
 
 async function getGeminiFacts(landmarkName) {
@@ -133,21 +126,18 @@ async function getGeminiFacts(landmarkName) {
         return facts.length > 0 ? facts : ['No information available.'];
     } catch (error) {
         console.error('Error fetching facts from Gemini:', error);
+        showErrorMessage('Error fetching landmark facts. Please try again.');
         return ['Unable to fetch information about this landmark.'];
     }
 }
 
-async function displayFactList() {
+function displayFactList() {
     factList.innerHTML = '';
-    if (facts.length === 0) {
-        factList.innerHTML = '<li>Loading facts...</li>';
-    } else {
-        facts.slice(0, 10).forEach(fact => {
-            const factItem = document.createElement('li');
-            factItem.textContent = fact.trim();
-            factList.appendChild(factItem);
-        });
-    }
+    facts.slice(0, 10).forEach(fact => {
+        const factItem = document.createElement('li');
+        factItem.textContent = fact.trim();
+        factList.appendChild(factItem);
+    });
 
     if (facts.length > 10) {
         loadMoreBtn.classList.remove('hidden');
@@ -172,12 +162,29 @@ function loadMoreFacts() {
     }
 }
 
+// Show and hide loading spinner
+function showLoadingSpinner(isLoading) {
+    if (isLoading) {
+        loadingSpinner.style.display = 'inline-block';
+    } else {
+        loadingSpinner.style.display = 'none';
+    }
+}
+
+// Show error message
+function showErrorMessage(message) {
+    if (!errorMessage) {
+        errorMessage = document.createElement('div');
+        errorMessage.id = 'error-message';
+        document.body.appendChild(errorMessage);
+    }
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('hidden');
+}
+
 // Nearby Places Function
 function getNearbyPlaces(location) {
-    if (!location) {
-        console.error('No location found.');
-        return;
-    }
+    if (!location) return;
 
     const service = new google.maps.places.PlacesService(document.createElement('div'));
     const request = {
@@ -189,9 +196,6 @@ function getNearbyPlaces(location) {
     service.nearbySearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
             updateNearbyPlacesList(results);
-        } else {
-            console.error('Error retrieving nearby places:', status);
-            placesList.innerHTML = '<li>No nearby places found.</li>';
         }
     });
 }
@@ -204,4 +208,3 @@ function updateNearbyPlacesList(places) {
         placesList.appendChild(li);
     });
 }
-
