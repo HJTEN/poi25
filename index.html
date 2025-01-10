@@ -3,53 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>P.O.I. Explorer</title>
-    <!-- Link to external CSS -->
-    <link rel="stylesheet" href="css/styles.css">
+    <title>POI Explorer</title>
+    <link rel="stylesheet" href="css/styles.css"> <!-- Updated CSS path -->
 </head>
 <body>
-    <!-- Header -->
     <header>
-        <h1>P.O.I. Explorer</h1>
+        <h1>POI Explorer</h1>
+        <p>Discover and learn about landmarks through your camera!</p>
     </header>
 
-    <!-- Navigation -->
     <nav>
         <a href="#home">Home</a>
         <a href="#explore">Explore</a>
-        <a href="#nearby">Nearby Places</a>
+        <a href="#about">About</a>
     </nav>
 
-    <!-- Main Content -->
     <main id="main-content">
         <!-- Home Section -->
-        <section id="home" class="active">
-            <h2>Welcome to P.O.I. Explorer</h2>
+        <section id="home">
+            <h2>Welcome to POI Explorer</h2>
             <button id="start-exploring">Start Exploring</button>
         </section>
 
         <!-- Explore Section -->
         <section id="explore" class="hidden">
-            <video id="camera-feed" autoplay playsinline></video>
-            <canvas id="canvas" style="display:none;"></canvas>
-            <div id="landmark-info">
-                <h2>Landmark Name</h2>
+            <h2>Explore Landmarks</h2>
+            <video id="camera-feed" autoplay></video>
+            <canvas id="canvas" class="hidden"></canvas>
+            <div id="landmark-info" class="hidden">
+                <h2></h2>
                 <ul id="fact-list"></ul>
                 <button id="load-more-btn" class="hidden">Load More Facts</button>
             </div>
+            <ul id="places-list"></ul>
         </section>
 
-        <!-- Nearby Places Section -->
-        <section id="nearby" class="hidden">
-            <h2>Nearby Places</h2>
-            <ul id="places-list"></ul>
+        <!-- About Section -->
+        <section id="about">
+            <h2>About POI Explorer</h2>
+            <p>This app uses camera detection to identify landmarks and provide interesting facts about them.</p>
         </section>
     </main>
 
-    <!-- Google Maps JavaScript API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4Xo27wNyl5vJXm32137rlFa4VAcc7JJ4&libraries=places"></script>
+    <footer>
+        <p>POI Explorer &copy; 2025</p>
+    </footer>
 
-    <!-- Link to external JavaScript -->
-    <script src="js/script.js" defer></script>
+    <!-- Link to JavaScript file -->
+    <script src="js/script.js" defer></script> <!-- Updated JS path -->
 </body>
 </html>
+
