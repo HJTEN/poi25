@@ -87,6 +87,8 @@ async function detectLandmarks() {
                 const landmark = data.responses[0].landmarkAnnotations[0];
                 updateLandmarkInfo(landmark.description);
                 getNearbyPlaces(landmark.locations[0]?.latLng);
+            } else {
+                console.log("No landmark detected or Vision API issue.");
             }
         } catch (error) {
             console.error('Error detecting landmarks:', error);
@@ -117,6 +119,11 @@ async function getGeminiFacts(landmarkName) {
         });
 
         const data = await response.json();
+        if (data.error) {
+            console.error("Gemini API Error:", data.error);
+            return ['Error fetching facts from Gemini.'];
+        }
+
         return data.candidates[0]?.content?.parts[0]?.text?.split('\n') || ['No information available.'];
     } catch (error) {
         console.error('Error fetching facts from Gemini:', error);
