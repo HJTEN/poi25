@@ -28,13 +28,20 @@
         <!-- Explore Section -->
         <section id="explore" class="hidden">
             <h2>Explore Landmarks</h2>
+            <!-- Camera feed for live detection -->
             <video id="camera-feed" autoplay playsinline></video>
+            
+            <!-- Hidden canvas to process the video feed for landmark detection -->
             <canvas id="canvas" class="hidden"></canvas>
+            
+            <!-- Landmark information section -->
             <div id="landmark-info" class="hidden">
-                <h2></h2>
+                <h2 id="landmark-name">Landmark Name</h2>
                 <ul id="fact-list"></ul>
                 <button id="load-more-btn" class="hidden">Load More Facts</button>
             </div>
+            
+            <!-- List of nearby places (optional, could be expanded based on location) -->
             <ul id="places-list"></ul>
         </section>
 
@@ -49,7 +56,7 @@
         <p>POI Explorer &copy; 2025</p>
     </footer>
 
-    <!-- Link to JavaScript file -->
+    <!-- External JS and API Keys -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA4Xo27wNyl5vJXm32137rlFa4VAcc7JJ4&libraries=places"></script>
     <script src="js/script.js" defer></script> <!-- Updated JS path -->
 </body>
