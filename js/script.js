@@ -11,9 +11,9 @@ const loadingSpinner = document.getElementById('loading-spinner'); // Loading sp
 const errorMessage = document.getElementById('error-message'); // Error message container
 
 // API keys and endpoints
-const GOOGLE_API_KEY = 'AIzaSyA4Xo27wNyl5vJXm32137rlFa4VAcc7JJ4';
+const GOOGLE_API_KEY = 'AIzaSyDFS_oqSACK3SkKwjHSzHpX3IJZMWqESTY';
 const VISION_API_ENDPOINT = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`;
-const GEMINI_API_KEY = 'AIzaSyDPFQk3OacdkghR1ayiz0SE_MBfwuoXsgE';
+const GEMINI_API_KEY = 'AIzaSyCAgALTvZSSIfTM9xs51CckIWVb4cxH8Wo';
 const GEMINI_API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
 // Global variables
