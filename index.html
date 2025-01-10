@@ -29,7 +29,7 @@
         <section id="explore" class="hidden">
             <h2>Explore Landmarks</h2>
             <!-- Camera feed for live detection -->
-            <video id="camera-feed" autoplay playsinline></video>
+            <video id="camera-feed" autoplay playsinline class="hidden"></video>
             
             <!-- Hidden canvas to process the video feed for landmark detection -->
             <canvas id="canvas" class="hidden"></canvas>
@@ -37,6 +37,10 @@
             <!-- Landmark information section -->
             <div id="landmark-info" class="hidden">
                 <h2 id="landmark-name">Landmark Name</h2>
+                
+                <!-- Loading indicator -->
+                <div id="loading-spinner" class="hidden">Loading facts...</div>
+                
                 <ul id="fact-list"></ul>
                 <button id="load-more-btn" class="hidden">Load More Facts</button>
             </div>
@@ -61,3 +65,4 @@
     <script src="js/script.js" defer></script> <!-- Updated JS path -->
 </body>
 </html>
+
