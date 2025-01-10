@@ -46,43 +46,53 @@ async function startCamera() {
             video: { facingMode: 'environment' }
         });
         cameraFeed.srcObject = stream;
+        cameraFeed.addEventListener('loadedmetadata', () => {
+            detectLandmarks();
+        });
         await cameraFeed.play();
-        detectLandmarks();
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Unable to access the camera. Please check permissions.');
     }
 }
 
+let frameCount = 0;
 async function detectLandmarks() {
     const ctx = canvas.getContext('2d');
     canvas.width = cameraFeed.videoWidth;
     canvas.height = cameraFeed.videoHeight;
 
     async function processFrame() {
-        ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-        const base64Image = imageData.split(',')[1];
+        frameCount++;
+        if (frameCount % 3 === 0) {  // Process every 3rd frame
+            ctx.drawImage(cameraFeed, 0, 0, canvas.width, canvas.height);
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            const base64Image = imageData.split(',')[1];
 
-        const response = await fetch(VISION_API_ENDPOINT, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                requests: [{
-                    image: { content: base64Image },
-                    features: [{ type: 'LANDMARK_DETECTION', maxResults: 1 }]
-                }]
-            })
-        });
+            try {
+                const response = await fetch(VISION_API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        requests: [{
+                            image: { content: base64Image },
+                            features: [{ type: 'LANDMARK_DETECTION', maxResults: 1 }]
+                        }]
+                    })
+                });
 
-        const data = await response.json();
-        if (data.responses[0]?.landmarkAnnotations) {
-            const landmark = data.responses[0].landmarkAnnotations[0];
-            updateLandmarkInfo(landmark.description);
-            getNearbyPlaces(landmark.locations[0]?.latLng);
+                const data = await response.json();
+                if (data.responses[0]?.landmarkAnnotations) {
+                    const landmark = data.responses[0].landmarkAnnotations[0];
+                    updateLandmarkInfo(landmark.description);
+                    getNearbyPlaces(landmark.locations[0]?.latLng);
+                }
+            } catch (error) {
+                console.error('Error detecting landmarks:', error);
+                alert('Error detecting landmarks. Please try again.');
+            }
         }
-
-        requestAnimationFrame(processFrame); // Process the next frame
+        requestAnimationFrame(processFrame); // Continue processing
     }
 
     processFrame();
@@ -91,8 +101,12 @@ async function detectLandmarks() {
 // Landmark Info and Fact Generation
 async function updateLandmarkInfo(landmarkName) {
     landmarkInfo.querySelector('h2').textContent = landmarkName;
+    landmarkInfo.querySelector('.loading').classList.remove('hidden');  // Show loading
+
     facts = await getGeminiFacts(landmarkName);
     displayFactList();
+
+    landmarkInfo.querySelector('.loading').classList.add('hidden');  // Hide loading
 }
 
 async function getGeminiFacts(landmarkName) {
@@ -123,13 +137,17 @@ async function getGeminiFacts(landmarkName) {
     }
 }
 
-function displayFactList() {
+async function displayFactList() {
     factList.innerHTML = '';
-    facts.slice(0, 10).forEach(fact => {
-        const factItem = document.createElement('li');
-        factItem.textContent = fact.trim();
-        factList.appendChild(factItem);
-    });
+    if (facts.length === 0) {
+        factList.innerHTML = '<li>Loading facts...</li>';
+    } else {
+        facts.slice(0, 10).forEach(fact => {
+            const factItem = document.createElement('li');
+            factItem.textContent = fact.trim();
+            factList.appendChild(factItem);
+        });
+    }
 
     if (facts.length > 10) {
         loadMoreBtn.classList.remove('hidden');
@@ -156,7 +174,10 @@ function loadMoreFacts() {
 
 // Nearby Places Function
 function getNearbyPlaces(location) {
-    if (!location) return;
+    if (!location) {
+        console.error('No location found.');
+        return;
+    }
 
     const service = new google.maps.places.PlacesService(document.createElement('div'));
     const request = {
@@ -168,6 +189,9 @@ function getNearbyPlaces(location) {
     service.nearbySearch(request, (results, status) => {
         if (status === google.maps.places.PlacesServiceStatus.OK) {
             updateNearbyPlacesList(results);
+        } else {
+            console.error('Error retrieving nearby places:', status);
+            placesList.innerHTML = '<li>No nearby places found.</li>';
         }
     });
 }
@@ -180,3 +204,4 @@ function updateNearbyPlacesList(places) {
         placesList.appendChild(li);
     });
 }
+
